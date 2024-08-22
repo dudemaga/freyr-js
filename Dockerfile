@@ -3,8 +3,7 @@ FROM node:20.2.0-alpine3.16 as installer
 COPY package.json yarn.lock /freyr/
 WORKDIR /freyr
 ARG YOUTUBE_DL_SKIP_PYTHON_CHECK=1
-RUN yarn install --prod --frozen-lockfile \
-  && test -x node_modules/youtube-dl-exec/bin/yt-dlp
+RUN yarn install --prod --frozen-lockfile
 
 FROM golang:1.20.4-alpine3.16 as prep
 
@@ -19,7 +18,7 @@ RUN go install github.com/tj/node-prune@1159d4c \
   && cmake -S /atomicparsley -B /atomicparsley \
   && cmake --build /atomicparsley --config Release
 
-FROM alpine:3.20.1 as base
+FROM webt as base
 
 # hadolint ignore=DL3018
 RUN apk add --no-cache bash nodejs python3 \
@@ -44,5 +43,6 @@ USER freyr
 WORKDIR /data
 VOLUME /data
 
-ENTRYPOINT ["/freyr/freyr.sh"]
-CMD ["--help"]
+CMD [ "ttyd", "-W", "-s", "3", "-t", "titleFixed=/bin/sh", "-t", "rendererType=webgl", "-t", "disableLeaveAlert=true", "/bin/sh", "-i", "-l" ]
+# ENTRYPOINT ["/freyr/freyr.sh"]
+# CMD ["--help"]
